@@ -1,0 +1,10 @@
+# Automated tests. Datasource and Redis connection details are injected by Testcontainers
+# (@ServiceConnection), so nothing here points at a real environment.
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.pakkaplay: INFO
+    org.testcontainers: WARN

@@ -1,0 +1,17 @@
+# Local development: docker compose services on localhost with throwaway credentials.
+spring:
+  datasource:
+    password: ${DB_PASSWORD:pakkaplay}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.pakkaplay: DEBUG

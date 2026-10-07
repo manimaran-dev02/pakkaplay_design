@@ -1,0 +1,13 @@
+<header class="topbar">
+  <a class="brand" routerLink="/dashboard">Pakka Play</a>
+  <nav aria-label="Main">
+    @for (item of navItems; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+        item.label
+      }}</a>
+    }
+  </nav>
+</header>
+<main>
+  <router-outlet />
+</main>

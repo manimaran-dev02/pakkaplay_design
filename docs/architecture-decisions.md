@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Format: Context → Decision → Consequences. Status: **Proposed** until approved.
+Format: Context → Decision → Consequences. Status: **Accepted** (2026-10-07). Product name: **Pakka Play**.
 
 ---
 
@@ -10,7 +10,7 @@ Format: Context → Decision → Consequences. Status: **Proposed** until approv
 - **Consequences:** Simple deploy and transactions; modules can be extracted later if scale requires.
 
 ## ADR-002 Monorepo
-- **Decision:** `backend/`, `web/`, `mobile/`, `docs/`, `ci/` in one repo; CI jobs path-filtered.
+- **Decision:** `backend/`, `web/`, `mobile/`, `docs/`, `ci/` in one repo. All CI jobs run on every change for now; add path filters when build times warrant it.
 - **Consequences:** Atomic cross-stack changes; one place for API contract and docs.
 
 ## ADR-003 Event-sourced scoring, CRUD elsewhere

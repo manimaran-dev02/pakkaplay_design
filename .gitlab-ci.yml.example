@@ -1,0 +1,38 @@
+# GitLab CI equivalent of .github/workflows/ci.yml. Rename to .gitlab-ci.yml to use.
+stages: [test, build]
+
+variables:
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_CERTDIR: "/certs"
+
+backend:
+  stage: test
+  image: eclipse-temurin:21-jdk
+  services: [docker:dind]   # Testcontainers
+  script: [ci/backend.sh]
+
+web:
+  stage: test
+  image: node:24
+  script: [ci/web.sh]
+
+mobile:
+  stage: test
+  image: ghcr.io/cirruslabs/flutter:3.47.6
+  script: [ci/mobile.sh]
+
+security:
+  stage: test
+  image: docker:cli
+  services: [docker:dind]
+  before_script: [apk add --no-cache bash]
+  script: [ci/security.sh]
+
+docker:
+  stage: build
+  image: docker:cli
+  services: [docker:dind]
+  before_script: [apk add --no-cache bash]
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHA
+  script: [ci/docker.sh]

@@ -1,6 +1,6 @@
-# Implementation Plan — Pro Kabaddi Sports Platform
+# Implementation Plan — Pakka Play (Pro Kabaddi Sports Platform)
 
-Status: **DRAFT — awaiting approval before Phase 1**
+Status: **Approved. Phase 1 complete; Phase 0.5 (design) blocked on D-1.**
 Date: 2026-10-07
 
 ---
@@ -10,7 +10,7 @@ Date: 2026-10-07
 | Item | Finding |
 |------|---------|
 | Repository | Empty (no commits, no files) on branch `claude/pro-kabaddi-sports-platform-afy8dl` |
-| `docs/design/` | **Not present / not imported.** The Claude Design project (`Kabaddi Vision Mobile.dc.html`, `support.js`) could not be fetched: design-sync needs `/design-login`, which can't run in this headless session. See `docs/design/README.md`. |
+| `docs/design/` | **Not imported yet.** The Claude Design project (`Kabaddi Vision Mobile.dc.html`, `support.js`) could not be fetched: design-sync needs `/design-login`, which can't run in this headless session. See `docs/design/README.md`. |
 | Existing code to reuse | None |
 
 **Consequence:** This plan is derived from the technical specification only.
@@ -35,10 +35,9 @@ pakkaplay_design/
 ├── docker-compose.yml          # dev: postgres, redis, backend, web
 ├── docker-compose.prod.yml     # prod template (+ nginx)
 ├── .env.example
-├── .github/workflows/
-│   ├── backend.yml  web.yml  mobile.yml  docker.yml
+├── .github/workflows/ci.yml    # jobs: backend, web, mobile, security, docker
 ├── ci/                          # shell scripts called by CI → portable to GitLab
-│   ├── backend.sh  web.sh  mobile.sh  docker.sh
+│   ├── backend.sh  web.sh  mobile.sh  security.sh  docker.sh
 ├── docs/
 │   ├── design/                  # imported design = UI source of truth
 │   ├── implementation-plan.md
@@ -66,7 +65,7 @@ pakkaplay_design/
 │       src/main/resources/
 │       ├── application.yml  application-dev.yml  application-test.yml  application-prod.yml
 │       └── db/migration/V1__...sql
-├── web/                         # Angular (latest stable, standalone components)
+├── web/                         # Angular 22 (standalone, zoneless)
 │   ├── Dockerfile  nginx.conf
 │   └── src/app/
 │       ├── core/                # auth service, interceptors, guards, api clients, ws client
@@ -99,13 +98,21 @@ ArchUnit tests enforce this.
 - Produce `design-system.md` (tokens), `screens.md` (inventory + nav map), `flows.md` (per role).
 - Map each screen → API endpoints → phase. Update this plan.
 
-### Phase 1 — Foundation
+### Phase 1 — Foundation ✅ (done)
 - Monorepo skeleton (above). Backend boots with Actuator health, Flyway V1 (extensions only: `pgcrypto`), OpenAPI UI, global error handler, profiles.
 - Angular app shell (routing, lazy feature stubs, interceptor stubs, theme from design tokens once available).
 - Flutter app shell (Riverpod, GoRouter, Dio, flutter_secure_storage, theme).
 - docker-compose: postgres 16, redis 7, backend, web (nginx).
 - CI: backend build+test, web lint+test+build, flutter analyze+test (+ apk build on main), Docker build, dependency scanning.
 - **Exit:** `docker compose up` gives a healthy stack; CI green.
+- **Result:** Backend tests pass: 7 unit/architecture tests and 5 integration tests on
+  real Postgres + Redis. Web: lint, format, 7 tests and production build pass. Mobile:
+  analyze clean and 6 tests pass. The full compose stack was run healthy and probed
+  through nginx. Swagger UI and the web app were checked in Chromium at desktop and
+  390px widths.
+- **Not verified locally:** the multi-stage Docker *build* stages and the Trivy scan,
+  because sandbox containers can't reach package registries. The runtime stages were
+  verified with host-built artifacts. Both run in CI.
 
 ### Phase 2 — Authentication & authorization
 - Tables: `users, roles, permissions, user_roles, role_permissions, refresh_tokens, password_reset_tokens, email_verification_tokens, audit_logs`.
@@ -174,7 +181,7 @@ ArchUnit tests enforce this.
 | Players/teams/tournaments browse | ✅ | ✅ |
 | Players/teams/tournaments manage | ✅ | Team manager subset |
 | Match setup, officials | ✅ | — |
-| Live scorer console | ✅ (tablet-first) | ⚠️ decision D-4 |
+| Live scorer console | ✅ (tablet-first) | — (D-4: web only at first) |
 | Live scoreboard viewing | ✅ | ✅ |
 | Statistics | ✅ | ✅ |
 | Social feed, communities, events | ✅ | ✅ (primary) |
@@ -204,7 +211,7 @@ ArchUnit tests enforce this.
 7. **A-7** English only initially; i18n hooks (Angular i18n / Flutter intl) set up but not translated.
 8. **A-8** Media storage: local filesystem in dev, S3-compatible in prod.
 9. **A-9** Email sending: logged in dev; SMTP adapter config in prod.
-10. **A-10** Package/group id `com.pakkaplay`; app display name "Pro Kabaddi Sports Platform" (to be reconciled with design branding — see C-1).
+10. **A-10** Product name **Pakka Play** (D-2); package/group id `com.pakkaplay`.
 
 ---
 
@@ -212,7 +219,7 @@ ArchUnit tests enforce this.
 
 Since the design could not be read, these are **potential** conflicts to verify in Phase 0.5:
 
-- **C-1 Branding:** design project is "Kabaddi Vision", repo is "pakkaplay", spec says "Pro Kabaddi Sports Platform". Need one product name.
+- **C-1 Branding:** resolved: **Pakka Play** (D-2). Any "Kabaddi Vision" wording in the design is treated as a working title.
 - **C-2 Mobile-only design:** design file is a *mobile* design; spec requires a responsive Angular web app (admin, organizer, scorer). Web layouts would be derived from mobile design + Angular Material unless desktop designs exist.
 - **C-3 Scorer device:** spec puts scorers on web; a mobile design may include a scorer screen intended for phones.
 - **C-4 Angular Material vs custom design system:** if the design's visual language diverges strongly from Material, we'd use CDK + custom components instead of Material components.
@@ -220,23 +227,23 @@ Since the design could not be read, these are **potential** conflicts to verify 
 
 ---
 
-## 7. Decisions requiring your approval
+## 7. Decisions
 
-| # | Decision | Recommendation |
-|---|----------|----------------|
-| **D-1** | **Design import** — how do you want to provide the design files? | Use Claude Design "Send to Claude Code Web", or commit the exported files into `docs/design/`. *Blocks UI work, not backend Phase 1.* |
-| D-2 | Product name / branding (C-1) | Decide one name; used for package names, app ids, titles. |
-| D-3 | Monorepo with `backend/`, `web/`, `mobile/` | Yes (single repo, path-filtered CI). |
-| D-4 | Live scorer UI on Flutter too? | Web (tablet-first) only initially; add to Flutter later if the design includes it. |
-| D-5 | CI platform | GitHub Actions now, with logic in `ci/*.sh` for easy GitLab port. |
-| D-6 | Angular version / style | Latest stable (v20.x), standalone components, signals for local state, RxJS for streams. |
-| D-7 | Undo semantics | Compensating `EVENT_VOIDED` events; only last N events undoable by scorer, older corrections via review/admin. |
-| D-8 | Feed strategy | Fan-out-on-read in Postgres; revisit at scale. |
-| D-9 | Nearby events geo search | Plain lat/lng + bounding box/haversine; PostGIS only if needed. |
-| D-10 | Proceed with **Phase 1 backend/infra** while design import is pending? | Yes — Phase 1 is UI-agnostic except theme tokens, which will be stubbed. |
-
----
+| # | Decision | Outcome |
+|---|----------|---------|
+| **D-1** | **Design import** | **OPEN.** Blocks all UI work. Provide the files through Claude Design "Send to Claude Code Web", `/design-login` in an interactive session, or by committing the export to `docs/design/`. |
+| D-2 | Product name | ✅ **Pakka Play** (package `com.pakkaplay`, app id `com.pakkaplay.pakka_play`) |
+| D-3 | Monorepo `backend/`, `web/`, `mobile/` | ✅ Approved (default) |
+| D-4 | Live scorer UI | ✅ Web only at first |
+| D-5 | CI platform | ✅ GitHub Actions, logic in `ci/*.sh`; `.gitlab-ci.yml.example` provided |
+| D-6 | Angular version | ✅ Angular 22 (standalone, zoneless, signals). **Requires Node ≥ 22.22.3**; Node 24 LTS used |
+| D-7 | Undo semantics | ✅ Compensating `EVENT_VOIDED` events |
+| D-8 | Feed strategy | ✅ Fan-out-on-read |
+| D-9 | Nearby events geo search | ✅ lat/lng + haversine, no PostGIS for now |
+| D-10 | Start Phase 1 before design import | ✅ Done |
 
 ## 8. Next step
 
-On approval: execute Phase 1 and stop for review at its exit criteria.
+Phase 2 (authentication and authorization) can start now, because it has no UI
+dependency beyond the login screens. Phase 0.5 runs as soon as the design is in
+`docs/design/`.
