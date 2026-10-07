@@ -1,7 +1,11 @@
 # Local development: docker compose services on localhost with throwaway credentials.
+# Defaults match .env.example, so running from an IDE needs no environment variables.
 spring:
   datasource:
     password: ${DB_PASSWORD:pakkaplay}
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:pakkaplay}
   jpa:
     properties:
       hibernate:

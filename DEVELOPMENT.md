@@ -27,6 +27,33 @@ cd web && npm install && npm start
 cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
 ```
 
+## IntelliJ IDEA
+
+1. **File → Open** and select the repository root (not `backend/`). When IntelliJ
+   offers to *Load Maven project* for `backend/pom.xml`, accept. Otherwise right-click
+   `backend/pom.xml` and choose **Add as Maven Project**.
+2. **File → Project Structure → Project → SDK**: choose JDK 21.
+3. Start the infrastructure: `cp .env.example .env && docker compose up -d postgres redis`.
+4. Run the shared configuration **PakkaPlayApplication (dev)** from the run
+   configurations dropdown. It lives in `.run/`. In Community Edition, run
+   `PakkaPlayApplication.main()` instead. You don't need any environment variables,
+   because the dev-profile defaults match `.env.example`.
+5. Check http://localhost:8080/actuator/health and http://localhost:8080/swagger-ui.html.
+
+Other ways to run things from IntelliJ:
+
+- Tests: right-click `backend/src/test/java` and choose **Run 'All Tests'**. `*IT` tests
+  need Docker running.
+- Web: in Ultimate, open `web/package.json` and click ▶ next to `start`. Or run
+  `npm start` in the terminal.
+- Mobile: install the Flutter and Dart plugins, set the Flutter SDK path, and run
+  `mobile/lib/main.dart`. Add `--dart-define=API_BASE_URL=http://10.0.2.2:8080` under
+  *Additional run args*.
+
+If Postgres reports `password authentication failed` after you change `DB_PASSWORD`:
+Postgres sets the password only when its volume is first created. Recreate the volume
+with `docker compose down -v` (this deletes local data).
+
 ## Configuration
 
 - Backend profiles: `dev` (default), `test`, `prod`. Values come from environment
